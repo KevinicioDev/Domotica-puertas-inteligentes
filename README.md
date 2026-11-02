@@ -1,0 +1,2 @@
+# Domotica-puertas-inteligentes
+Sistema domótico full-stack para control de acceso físico con RFID. Administra permisos, usuarios y cerraduras en tiempo real usando Next.js, Drizzle ORM y hardware ESP32
