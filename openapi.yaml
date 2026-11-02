@@ -1,0 +1,162 @@
+openapi: 3.0.0
+info:
+  title: API Domótica RFID
+  version: 1.0.0
+paths:
+  #Endpoint para el estado de la puerta
+  /api/door/status:
+    get:
+      summary: "Devuelve el estado del seguro"
+      responses:
+        "200":
+          description: "Puerta abierta!"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  abierta:
+                    type: boolean
+
+  #Endpoint para el RFID (UID)
+
+  /api/door/unlock:
+    post:
+      summary: "Devuelve si el estado del acceso"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - uid
+                - doorId
+              properties:
+                uid:
+                  type: string
+                doorId:
+                  type: string
+                  example: "puerta-principal"
+      responses:
+        "200":
+          description: "Acceso autorizado!"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  uid:
+                    type: string
+                  mensaje:
+                    type: string
+                    example: "Usuario con acceso!"
+        "403":
+          description: "Acceso denegado"
+
+  #Endpoint ID usuario autenticado
+  /api/door/enroll/start:
+    post:
+      summary: "Activa el modo de registro temporal para un usuario"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: string
+                  description: "El id del usuario de la sesion de better auth"
+              required:
+                - userId
+                - doorId
+      responses:
+        "200":
+          description: "Modo registro activado con exito! Esperando la lectura del esp32"
+        "401":
+          description: "No autorizado! Sesion Invalida"
+
+  #Endpoint que devuleve si el estado es pendiente exitoso o error
+  /api/door/enroll/status:
+    get:
+      summary: "Revisa el estado de vinculación RFID"
+      responses:
+        "200":
+          description: "Devuelve el estado actual del proceso"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    #Con este array no evitamos tener que poner los diferentes responses
+                    enum: [pending, success, error]
+                  uid:
+                    type: string
+                    description: "El UID de la tarjeta asignada si el estado es success"
+
+  #Endpoitn para el panel y el esp32 puedan leer y modificar la tabla
+
+  /api/door/state:
+    get:
+      summary: "Consulta el estado de una cerradura especifica"
+      responses:
+        "200":
+          description: "Estado actual de la cerradura"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  isLocked:
+                    type: boolean
+      parameters:
+        - in: query
+          name: doorId
+          required: true
+          schema:
+            type: string
+            example: "puerta-principal"
+    post:
+      summary: "Ordena abrir o cerrar la puerta desde el dashboard web"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                action:
+                  type: string
+                  enum:
+                    - [lock, unlock]
+      responses:
+        "200":
+          description: "Puerta actualizada con exito!"
+
+  # endpoint para los tags
+
+  /api/tags:
+    patch:
+      summary: "Actualiza el nombre de una tarjeta RFID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - uid
+                - label
+              properties:
+                uid:
+                  type: string
+                  description: "El identificador unico de la tarjeta"
+                label:
+                  type: string
+                  description: "El nuevo nombre que el usuario quiere asgnarle"
+      responses:
+        "200":
+          description: "Etiqueta actualizada con exito!"
